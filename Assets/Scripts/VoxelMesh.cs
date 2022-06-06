@@ -72,20 +72,24 @@ namespace Voxel
             if (selectedVoxel == newValue)
             {
                 Vector3Int alternativeVoxel = new Vector3Int(RoundToIntAltDown(point.x), RoundToIntAltDown(point.y), RoundToIntAltDown(point.z));
-                if(alternativeVoxel == new Vector3Int(voxelX, voxelY, voxelZ))
+                if (alternativeVoxel == new Vector3Int(voxelX, voxelY, voxelZ))
                 {
                     alternativeVoxel = new Vector3Int(RoundToIntAltUp(point.x), RoundToIntAltUp(point.y), RoundToIntAltUp(point.z));
                 }
                 print("Alt Grid Coord: " + alternativeVoxel);
                 // Try adjacent voxel
                 selectedVoxel = _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z];
-                if (selectedVoxel != newValue)
+                if (selectedVoxel != newValue && alternativeVoxel.x != 0 && alternativeVoxel.x != _dimentions.x - 1 &&
+                    alternativeVoxel.y != 0 && alternativeVoxel.y != _dimentions.y - 1 &&
+                    alternativeVoxel.z != 0 && alternativeVoxel.z != _dimentions.z - 1)
                 {
                     _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z] = newValue;
                     GenerateMesh();
                 }
             }
-            else
+            else if(voxelX != 0 && voxelX != _dimentions.x - 1 &&
+                    voxelY != 0 && voxelY != _dimentions.y - 1 &&
+                    voxelZ != 0 && voxelZ != _dimentions.z - 1)
             {
                 _voxels[voxelX, voxelY, voxelZ] = newValue;
                 GenerateMesh();
