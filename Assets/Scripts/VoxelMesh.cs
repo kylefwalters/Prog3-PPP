@@ -113,7 +113,7 @@ namespace Voxel
                     GenerateMesh();
                 }
             }
-            else 
+            else
             {
                 _voxels[voxelX, voxelY, voxelZ] = newValue;
                 GenerateMesh();
@@ -192,18 +192,27 @@ namespace Voxel
             void AddTri(int facenum, int v, int x, int y, int z, bool getOther = false, bool isInverted = false)
             {
                 // Add Mesh
-                for (int i = 0; i < 3; i++)
+                if (getOther)
                 {
-                    meshVerticies.Add(new Vector3(x, y, z) + vertPos[Faces[facenum, i]] / 2f);
+                    meshVerticies.Add(new Vector3(x, y, z) + vertPos[Faces[facenum, 0]] / 2f);
+                    meshVerticies.Add(new Vector3(x, y, z) + vertPos[Faces[facenum, 2]] / 2f);
+                    meshVerticies.Add(new Vector3(x, y, z) + vertPos[Faces[facenum, 3]] / 2f);
+                }
+                else
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        meshVerticies.Add(new Vector3(x, y, z) + vertPos[Faces[facenum, i]] / 2f);
+                    }
                 }
                 List<int> verts;
                 if (isInverted)
                 {
-                    verts = getOther ? new List<int>() { v, v + 3, v + 2 } : new List<int>() { v, v + 2, v + 1 };
+                    verts = new List<int>() { v, v + 2, v + 1 };
                 }
                 else
                 {
-                    verts = getOther ? new List<int>() { v, v + 2, v + 3 } : new List<int>() { v, v + 1, v + 2 };
+                    verts = new List<int>() { v, v + 1, v + 2 };
                 }
                 meshTriangles.AddRange(verts);
 
@@ -214,7 +223,7 @@ namespace Voxel
             }
 
             // Generate faces
-            VoxelTypes currentType;
+            VoxelTypes neighbourType;
             for (int x = 1; x < _dimentions.x - 1; x++)
             {
                 for (int y = 1; y < _dimentions.y - 1; y++)
@@ -235,71 +244,175 @@ namespace Voxel
                                 break;
                             case VoxelTypes.SlopeForward:
                                 AddQuad(6, meshVerticies.Count, x, y, z);
-                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeRight)
                                 {
                                     AddTri(4, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                //else if(neighbourType == VoxelTypes.SlopeBack)
+                                //{
+                                //    AddTri(30, meshVerticies.Count, x, y, z, false, true);
+                                //}
+                                neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeft)
                                 {
                                     AddTri(31, meshVerticies.Count, x, y, z, false, true);
                                 }
+                                //else if (neighbourType == VoxelTypes.SlopeBack)
+                                //{
+                                //    AddTri(5, meshVerticies.Count, x, y, z, true, true);
+                                //}
                                 break;
                             case VoxelTypes.SlopeRight:
                                 AddQuad(7, meshVerticies.Count, x, y, z);
-                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeForward)
                                 {
                                     AddTri(28, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBack)
                                 {
                                     AddTri(3, meshVerticies.Count, x, y, z, false, true);
                                 }
                                 break;
                             case VoxelTypes.SlopeBack:
                                 AddQuad(8, meshVerticies.Count, x, y, z);
-                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeRight)
                                 {
                                     AddTri(30, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeft)
                                 {
                                     AddTri(5, meshVerticies.Count, x, y, z, false, true);
                                 }
                                 break;
                             case VoxelTypes.SlopeLeft:
                                 AddQuad(9, meshVerticies.Count, x, y, z);
-                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeForward)
                                 {
                                     AddTri(2, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBack)
                                 {
                                     AddTri(29, meshVerticies.Count, x, y, z, false, true);
                                 }
                                 break;
                             case VoxelTypes.SlopeForwardInv:
                                 AddQuad(10, meshVerticies.Count, x, y, z);
+                                neighbourType = _voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeRightInv)
+                                {
+                                    AddTri(30, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeftInv)
+                                {
+                                    AddTri(5, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeRightInv:
                                 AddQuad(11, meshVerticies.Count, x, y, z);
+                                neighbourType = _voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeForwardInv)
+                                {
+                                    AddTri(2, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBackInv)
+                                {
+                                    AddTri(29, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeBackInv:
                                 AddQuad(12, meshVerticies.Count, x, y, z);
+                                neighbourType = _voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeRightInv)
+                                {
+                                    AddTri(4, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeftInv)
+                                {
+                                    AddTri(31, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeLeftInv:
                                 AddQuad(13, meshVerticies.Count, x, y, z);
+                                neighbourType = _voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeForwardInv)
+                                {
+                                    AddTri(28, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBackInv)
+                                {
+                                    AddTri(3, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.CornerForwardRight:
                                 AddTri(14, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(29, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(4, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(27, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.CornerBackRight:
                                 AddTri(15, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(28, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(5, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(27, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.CornerBackLeft:
                                 AddTri(16, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(2, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(30, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(1, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.CornerForwardLeft:
                                 AddTri(17, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(3, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(31, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(1, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.CornerForwardRightInv:
                                 AddTri(18, meshVerticies.Count, x, y, z);
@@ -315,15 +428,47 @@ namespace Voxel
                                 break;
                             case VoxelTypes.SlopeHorizontalForward:
                                 AddQuad(22, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[0, 4], y + Faces[0, 5], z + Faces[0, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(26, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(1, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeHorizontalRight:
                                 AddQuad(23, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[0, 4], y + Faces[0, 5], z + Faces[0, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(0, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(27, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeHorizontalBack:
                                 AddQuad(24, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[0, 4], y + Faces[0, 5], z + Faces[0, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(26, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(1, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeHorizontalLeft:
                                 AddQuad(25, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[0, 4], y + Faces[0, 5], z + Faces[0, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(0, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(27, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.Empty:
                                 break;
