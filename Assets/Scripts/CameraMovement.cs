@@ -46,24 +46,27 @@ public class CameraMovement : MonoBehaviour
         }
         // Camera Rotation
         // X
-        Vector3 rotation = Vector3.zero;
-        if (Input.GetAxis("Mouse Y") > 0)
+        if (Input.GetKey(KeyCode.Space))
         {
-            rotation.x = -_rotationSpeed * Time.deltaTime;
+            Vector3 rotation = Vector3.zero;
+            if (Input.GetAxis("Mouse Y") > 0)
+            {
+                rotation.x = -_rotationSpeed * Time.deltaTime;
+            }
+            else if (Input.GetAxis("Mouse Y") < 0)
+            {
+                rotation.x = _rotationSpeed * Time.deltaTime;
+            }
+            // Y
+            if (Input.GetAxis("Mouse X") > 0)
+            {
+                rotation.y = _rotationSpeed * Time.deltaTime;
+            }
+            else if (Input.GetAxis("Mouse X") < 0)
+            {
+                rotation.y = -_rotationSpeed * Time.deltaTime;
+            }
+            transform.eulerAngles += rotation; 
         }
-        else if (Input.GetAxis("Mouse Y") < 0)
-        {
-            rotation.x = _rotationSpeed * Time.deltaTime;
-        }
-        // Y
-        if (Input.GetAxis("Mouse X") > 0)
-        {
-            rotation.y = _rotationSpeed * Time.deltaTime;
-        }
-        else if (Input.GetAxis("Mouse X") < 0)
-        {
-            rotation.y = -_rotationSpeed * Time.deltaTime;
-        }
-        transform.eulerAngles += rotation;
     }
 }

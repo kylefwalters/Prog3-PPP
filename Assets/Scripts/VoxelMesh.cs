@@ -28,7 +28,11 @@ namespace Voxel
             CornerForwardRightInv,
             CornerBackRightInv,
             CornerBackLeftInv,
-            CornerForwardLeftInv
+            CornerForwardLeftInv,
+            SlopeHorizontalForward,
+            SlopeHorizontalRight,
+            SlopeHorizontalBack,
+            SlopeHorizontalLeft
         }
         private VoxelTypes[,,] _voxels;
 
@@ -109,9 +113,7 @@ namespace Voxel
                     GenerateMesh();
                 }
             }
-            else if (voxelX != 0 && voxelX != _dimentions.x - 1 &&
-                    voxelY != 0 && voxelY != _dimentions.y - 1 &&
-                    voxelZ != 0 && voxelZ != _dimentions.z - 1)
+            else 
             {
                 _voxels[voxelX, voxelY, voxelZ] = newValue;
                 GenerateMesh();
@@ -134,33 +136,43 @@ namespace Voxel
             new Vector3(1, -1, 1) /*BFR*/, new Vector3(1, -1, -1), /*BBR*/
             };
 
-            int[,] Faces = new int[22, 9]
+            int[,] Faces = new int[32, 9]
             {
             // 0~3: Used for getting VertPos
             // 4~6: Used for checking neighbouring voxels
             // 7~8: Used for uvs
-            {0, 1, 2, 3, 0, 1, 0, 0, 0},     // Top
-            {7, 6, 5, 4, 0, -1, 0, 1, 0},    // Bottom
-            {2, 1, 5, 6, 0, 0, 1, 1, 1},     // Front
-            {0, 3, 7, 4, 0, 0, -1,  1, 1},   // Back
-            {3, 2, 6, 7, 1, 0, 0,  1, 1},    // Right
-            {1, 0, 4, 5, -1, 0, 0,  1, 1},   // Left
-            {0,5,6,3,0,0,0,1,1}, // Slope Forward
-            {1,6,7,0,0,0,0,1,1}, // Slope Right
-            {1,2,7,4,0,0,0,1,1}, // Slope Back
-            {2,3,4,5,0,0,0,1,1}, // Slope Left
-            {2,1,4,7,0,0,0,1,1}, // Slope Forward Inverted
-            {2,5,4,3,0,0,0,1,1}, // Slope Right Inverted
-            {3,6,5,0,0,0,0,1,1}, // Slope Back Inverted
-            {0,7,6,1,0,0,0,1,1}, // Slope Left Inverted
-            {0,5,3,0,0,0,0,1,1}, // Corner Forward Right
-            {1,6,4,0,0,0,0,1,1}, // Corner Back Right
-            {2,7,5,0,0,0,0,1,1}, // Corner Back Left
-            {3,4,6,0,0,0,0,1,1}, // Corner Forward Left
-            {2,5,7,0,0,0,0,1,1}, // Corner Forward Right Inverted
-            {3,6,4,0,0,0,0,1,1}, // Corner Back Right Inverted
-            {0,5,7,0,0,0,0,1,1}, // Corner Back Left Inverted
-            {1,6,4,0,0,0,0,1,1} // Corner Forward Left Inverted
+            {0,1,2,3,0,1,0,0,0},            // Top
+            {7,6,5,4,0,-1,0,1,0},           // Bottom
+            {2,1,5,6,0,0,1,1,1},            // Front
+            {0,3,7,4,0,0,-1,1,1},           // Back
+            {3,2,6,7,1,0,0,1,1},            // Right
+            {1,0,4,5,-1,0,0,1,1},           // Left
+            {0,5,6,3,0,0,0,1,1},            // Slope Forward
+            {1,6,7,0,0,0,0,1,1},            // Slope Right
+            {1,2,7,4,0,0,0,1,1},            // Slope Back
+            {2,3,4,5,0,0,0,1,1},            // Slope Left
+            {2,1,4,7,0,0,0,1,1},            // Slope Forward Inverted
+            {2,5,4,3,0,0,0,1,1},            // Slope Right Inverted
+            {3,6,5,0,0,0,0,1,1},            // Slope Back Inverted
+            {0,7,6,1,0,0,0,1,1},            // Slope Left Inverted
+            {3,4,6,0,0,0,0,1,1},            // Corner Forward Right
+            {1,6,4,0,0,0,0,1,1},            // Corner Back Right
+            {5,2,7,4,0,0,0,1,1},            // Corner Back Left
+            {0,5,7,0,0,0,0,1,1},            // Corner Forward Left
+            {6,1,3,0,0,0,0,1,1},            // Corner Forward Right Inverted
+            {5,0,2,0,0,0,0,1,1},            // Corner Back Right Inverted
+            {4,3,1,0,0,0,0,1,1},            // Corner Back Left Inverted
+            {7,2,0,0,0,0,0,1,1},            // Corner Forward Left Inverted
+            {5,1,3,7,0,0,0,1,1},            // Slope Horizontal Forward
+            {4,0,2,6,0,0,0,1,1},            // Slope Horizontal Right
+            {3,1,5,7,0,0,0,1,1},            // Slope Horizontal Down
+            {2,0,4,6,0,0,0,1,1},            // Slope Horizontal Left
+            {3,0,1,2,0,1,0,0,0},            // Top Alternate
+            {4,7,6,5,0,-1,0,1,0},           // Bottom Alternate
+            {6,2,1,5,0,0,1,1,1},            // Front Alternate
+            {4,0,3,7,0,0,-1,1,1},           // Back Alternate
+            {7,3,2,6,1,0,0,1,1},            // Right Alternate
+            {5,1,0,4,-1,0,0,1,1}            // Left Alternate
             };
 
             void AddQuad(int facenum, int v, int x, int y, int z)
@@ -177,8 +189,32 @@ namespace Voxel
 
                 meshuv.AddRange(new List<Vector2>() { bottomleft + new Vector2(0, 0.5f), bottomleft + new Vector2(0.5f, 0.5f), bottomleft + new Vector2(0.5f, 0), bottomleft });
             }
+            void AddTri(int facenum, int v, int x, int y, int z, bool getOther = false, bool isInverted = false)
+            {
+                // Add Mesh
+                for (int i = 0; i < 3; i++)
+                {
+                    meshVerticies.Add(new Vector3(x, y, z) + vertPos[Faces[facenum, i]] / 2f);
+                }
+                List<int> verts;
+                if (isInverted)
+                {
+                    verts = getOther ? new List<int>() { v, v + 3, v + 2 } : new List<int>() { v, v + 2, v + 1 };
+                }
+                else
+                {
+                    verts = getOther ? new List<int>() { v, v + 2, v + 3 } : new List<int>() { v, v + 1, v + 2 };
+                }
+                meshTriangles.AddRange(verts);
+
+                // Add uvs
+                Vector2 bottomleft = new Vector2(Faces[facenum, 7], Faces[facenum, 8]) / 2f;
+
+                meshuv.AddRange(new List<Vector2>() { bottomleft + new Vector2(0, 0.5f), bottomleft + new Vector2(0.5f, 0.5f), bottomleft + new Vector2(0.5f, 0) });
+            }
 
             // Generate faces
+            VoxelTypes currentType;
             for (int x = 1; x < _dimentions.x - 1; x++)
             {
                 for (int y = 1; y < _dimentions.y - 1; y++)
@@ -199,15 +235,47 @@ namespace Voxel
                                 break;
                             case VoxelTypes.SlopeForward:
                                 AddQuad(6, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(4, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(31, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeRight:
                                 AddQuad(7, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(28, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(3, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeBack:
                                 AddQuad(8, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(30, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(5, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeLeft:
                                 AddQuad(9, meshVerticies.Count, x, y, z);
+                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(2, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                {
+                                    AddTri(29, meshVerticies.Count, x, y, z, false, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeForwardInv:
                                 AddQuad(10, meshVerticies.Count, x, y, z);
@@ -222,37 +290,44 @@ namespace Voxel
                                 AddQuad(13, meshVerticies.Count, x, y, z);
                                 break;
                             case VoxelTypes.CornerForwardRight:
-                                AddQuad(14, meshVerticies.Count, x, y, z);
+                                AddTri(14, meshVerticies.Count, x, y, z);
                                 break;
                             case VoxelTypes.CornerBackRight:
-                                AddQuad(15, meshVerticies.Count, x, y, z);
+                                AddTri(15, meshVerticies.Count, x, y, z);
                                 break;
                             case VoxelTypes.CornerBackLeft:
-                                AddQuad(16, meshVerticies.Count, x, y, z);
+                                AddTri(16, meshVerticies.Count, x, y, z);
                                 break;
                             case VoxelTypes.CornerForwardLeft:
-                                AddQuad(17, meshVerticies.Count, x, y, z);
+                                AddTri(17, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.CornerForwardRightInv:
+                                AddTri(18, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.CornerBackRightInv:
+                                AddTri(19, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.CornerBackLeftInv:
+                                AddTri(20, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.CornerForwardLeftInv:
+                                AddTri(21, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.SlopeHorizontalForward:
+                                AddQuad(22, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.SlopeHorizontalRight:
+                                AddQuad(23, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.SlopeHorizontalBack:
+                                AddQuad(24, meshVerticies.Count, x, y, z);
+                                break;
+                            case VoxelTypes.SlopeHorizontalLeft:
+                                AddQuad(25, meshVerticies.Count, x, y, z);
                                 break;
                             case VoxelTypes.Empty:
                                 break;
                         }
-
-                        //SlopeForward,
-                        //SlopeRight,
-                        //SlopeBack,
-                        //SlopeLeft,
-                        //SlopeForwardInv,
-                        //SlopeBackInv,
-                        //SlopeRightInv,
-                        //SlopeLeftInv,
-                        //CornerForwardRight,
-                        //CornerBackRight,
-                        //CornerBackLeft,
-                        //CornerForwardLeft,
-                        //CornerForwardRightInv,
-                        //CornerBackRightInv,
-                        //CornerBackLeftInv,
-                        //CornerForwardLeftInv
                     }
                 }
             }
@@ -308,105 +383,76 @@ namespace Voxel
 
                             switch (voxelValue)
                             {
-                                case 1:
-                                case 2:
-                                case 3:
-                                case 4:
-                                case 7:
-                                case 8:
-                                case 11:
-                                case 12:
-                                case 13:
-                                case 14:
-                                case 15:
-                                case 16:
-                                case 19:
-                                case 23:
-                                case 27:
-                                case 28:
-                                case 29:
-                                case 30:
-                                case 31:
-                                case 32:
-                                case 35:
-                                case 39:
-                                case 41:
-                                case 42:
-                                case 43:
-                                case 44:
-                                case 45:
-                                case 46:
-                                case 47:
-                                case 48:
-                                case 49:
-                                case 50:
-                                case 51:
-                                case 52:
-                                case 53:
-                                case 55:
-                                case 56:
-                                case 57:
-                                case 58:
-                                case 59:
-                                case 60:
-                                case 61:
-                                case 62:
-                                case 63:
+                                default:
                                     _voxels[x, y, z] = VoxelTypes.Whole;
                                     break;
                                 case 5:
+                                case 53:
                                     _voxels[x, y, z] = VoxelTypes.SlopeLeftInv;
                                     break;
                                 case 6:
+                                case 54:
                                     _voxels[x, y, z] = VoxelTypes.SlopeRightInv;
                                     break;
                                 case 9:
+                                case 57:
                                     _voxels[x, y, z] = VoxelTypes.SlopeLeft;
                                     break;
                                 case 10:
+                                case 58:
                                     _voxels[x, y, z] = VoxelTypes.SlopeRight;
                                     break;
-                                case 17:
-                                    _voxels[x, y, z] = VoxelTypes.Whole; // SlopeHorizontalRight
-                                    break;
-                                case 18:
-                                    _voxels[x, y, z] = VoxelTypes.Whole; // SlopeHorizontalBack
-                                    break;
                                 case 20:
+                                case 36:
+                                case 39:
                                     _voxels[x, y, z] = VoxelTypes.SlopeForwardInv;
                                     break;
                                 case 21:
                                     _voxels[x, y, z] = VoxelTypes.CornerForwardRightInv;
                                     break;
                                 case 22:
-                                    _voxels[x, y, z] = VoxelTypes.CornerForwardLeftInv;
+                                    _voxels[x, y, z] = VoxelTypes.CornerBackRightInv;
                                     break;
+                                case 23:
                                 case 24:
                                     _voxels[x, y, z] = VoxelTypes.SlopeBackInv;
                                     break;
                                 case 25:
+                                    _voxels[x, y, z] = VoxelTypes.CornerBackLeft;
+                                    break;
+                                case 38:
                                     _voxels[x, y, z] = VoxelTypes.CornerBackLeftInv;
                                     break;
                                 case 26:
-                                    _voxels[x, y, z] = VoxelTypes.CornerBackRightInv;
+                                    _voxels[x, y, z] = VoxelTypes.CornerBackRight;
                                     break;
-                                case 33:
-                                    _voxels[x, y, z] = VoxelTypes.Whole; // SlopeHorizontalForward
+                                case 27:
+                                    _voxels[x, y, z] = VoxelTypes.SlopeBack;
                                     break;
-                                case 34:
-                                    _voxels[x, y, z] = VoxelTypes.Whole; // SlopeHorizontalLeft
+                                case 29:
+                                    _voxels[x, y, z] = VoxelTypes.SlopeHorizontalForward;
                                     break;
-                                case 36:
-                                    _voxels[x, y, z] = VoxelTypes.SlopeForwardInv;
+                                case 30:
+                                    _voxels[x, y, z] = VoxelTypes.SlopeHorizontalRight;
                                     break;
                                 case 37:
                                     _voxels[x, y, z] = VoxelTypes.CornerForwardLeftInv;
                                     break;
-                                case 38:
-                                    _voxels[x, y, z] = VoxelTypes.CornerForwardRightInv;
-                                    break;
                                 case 40:
+                                case 43:
                                     _voxels[x, y, z] = VoxelTypes.SlopeForward;
+                                    break;
+                                case 41:
+                                    _voxels[x, y, z] = VoxelTypes.CornerForwardRight;
+                                    break;
+                                case 42:
+                                    _voxels[x, y, z] = VoxelTypes.CornerForwardLeft;
+                                    break;
+                                case 45:
+                                    _voxels[x, y, z] = VoxelTypes.SlopeHorizontalLeft;
+                                    break;
+                                case 46:
+                                    _voxels[x, y, z] = VoxelTypes.SlopeHorizontalBack;
                                     break;
                             }
 
