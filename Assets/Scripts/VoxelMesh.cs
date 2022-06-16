@@ -109,12 +109,16 @@ namespace Voxel
                     alternativeVoxel.y != 0 && alternativeVoxel.y != _dimentions.y - 1 &&
                     alternativeVoxel.z != 0 && alternativeVoxel.z != _dimentions.z - 1)
                 {
+                    print(_voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z]);
                     _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z] = newValue;
                     GenerateMesh();
                 }
             }
-            else
+            else if (voxelX != 0 && voxelX != _dimentions.x - 1 &&
+                    voxelY != 0 && voxelY != _dimentions.y - 1 &&
+                    voxelZ != 0 && voxelZ != _dimentions.z - 1)
             {
+                print(_voxels[voxelX, voxelY, voxelZ]);
                 _voxels[voxelX, voxelY, voxelZ] = newValue;
                 GenerateMesh();
             }
@@ -249,19 +253,19 @@ namespace Voxel
                                 {
                                     AddTri(4, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                //else if(neighbourType == VoxelTypes.SlopeBack)
-                                //{
-                                //    AddTri(30, meshVerticies.Count, x, y, z, false, true);
-                                //}
+                                else if (neighbourType == VoxelTypes.SlopeBack || neighbourType == VoxelTypes.SlopeForwardInv)
+                                {
+                                    AddTri(30, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeft)
                                 {
                                     AddTri(31, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                //else if (neighbourType == VoxelTypes.SlopeBack)
-                                //{
-                                //    AddTri(5, meshVerticies.Count, x, y, z, true, true);
-                                //}
+                                else if (neighbourType == VoxelTypes.SlopeBack || neighbourType == VoxelTypes.SlopeForwardInv)
+                                {
+                                    AddTri(5, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 break;
                             case VoxelTypes.SlopeRight:
                                 AddQuad(7, meshVerticies.Count, x, y, z);
@@ -270,10 +274,18 @@ namespace Voxel
                                 {
                                     AddTri(28, meshVerticies.Count, x, y, z, false, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeLeft || neighbourType == VoxelTypes.CornerForwardRight || neighbourType == VoxelTypes.Empty || neighbourType == VoxelTypes.SlopeRightInv)
+                                {
+                                    AddTri(28, meshVerticies.Count, x, y, z, true, false);
+                                }
                                 neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBack)
                                 {
                                     AddTri(3, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                else if (neighbourType == VoxelTypes.SlopeLeft || neighbourType == VoxelTypes.CornerBackLeft || neighbourType == VoxelTypes.Empty || neighbourType == VoxelTypes.SlopeRightInv)
+                                {
+                                    AddTri(3, meshVerticies.Count, x, y, z, true, false);
                                 }
                                 break;
                             case VoxelTypes.SlopeBack:
@@ -283,10 +295,18 @@ namespace Voxel
                                 {
                                     AddTri(30, meshVerticies.Count, x, y, z, false, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeForward || neighbourType == VoxelTypes.SlopeBackInv)
+                                {
+                                    AddTri(4, meshVerticies.Count, x, y, z, true, true);
+                                }
                                 neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeft)
                                 {
                                     AddTri(5, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                else if (neighbourType == VoxelTypes.SlopeForward || neighbourType == VoxelTypes.SlopeBackInv)
+                                {
+                                    AddTri(31, meshVerticies.Count, x, y, z, true, true);
                                 }
                                 break;
                             case VoxelTypes.SlopeLeft:
@@ -296,10 +316,18 @@ namespace Voxel
                                 {
                                     AddTri(2, meshVerticies.Count, x, y, z, false, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeRight || neighbourType == VoxelTypes.CornerForwardLeft || neighbourType == VoxelTypes.SlopeLeftInv)
+                                {
+                                    AddTri(2, meshVerticies.Count, x, y, z, true, false);
+                                }
                                 neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBack)
                                 {
                                     AddTri(29, meshVerticies.Count, x, y, z, false, true);
+                                }
+                                else if (neighbourType == VoxelTypes.SlopeRight || neighbourType == VoxelTypes.CornerBackRight || neighbourType == VoxelTypes.SlopeLeftInv)
+                                {
+                                    AddTri(29, meshVerticies.Count, x, y, z, true, false);
                                 }
                                 break;
                             case VoxelTypes.SlopeForwardInv:
@@ -309,10 +337,18 @@ namespace Voxel
                                 {
                                     AddTri(30, meshVerticies.Count, x, y, z, true, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeBackInv)
+                                {
+                                    AddTri(30, meshVerticies.Count, x, y, z, false, false);
+                                }
                                 neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeftInv)
                                 {
                                     AddTri(5, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                else if (neighbourType == VoxelTypes.SlopeBackInv || neighbourType == VoxelTypes.SlopeForward)
+                                {
+                                    AddTri(5, meshVerticies.Count, x, y, z, false, false);
                                 }
                                 break;
                             case VoxelTypes.SlopeRightInv:
@@ -322,10 +358,18 @@ namespace Voxel
                                 {
                                     AddTri(2, meshVerticies.Count, x, y, z, true, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeLeftInv || neighbourType == VoxelTypes.CornerForwardRightInv || neighbourType == VoxelTypes.Empty)
+                                {
+                                    AddTri(2, meshVerticies.Count, x, y, z, false, false);
+                                }
                                 neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBackInv)
                                 {
                                     AddTri(29, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                else if (neighbourType == VoxelTypes.SlopeLeftInv || neighbourType == VoxelTypes.CornerBackLeftInv || neighbourType == VoxelTypes.Empty)
+                                {
+                                    AddTri(29, meshVerticies.Count, x, y, z, false, false);
                                 }
                                 break;
                             case VoxelTypes.SlopeBackInv:
@@ -335,10 +379,18 @@ namespace Voxel
                                 {
                                     AddTri(4, meshVerticies.Count, x, y, z, true, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeForwardInv)
+                                {
+                                    AddTri(4, meshVerticies.Count, x, y, z, false, false);
+                                }
                                 neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeftInv)
                                 {
                                     AddTri(31, meshVerticies.Count, x, y, z, true, true);
+                                }
+                                else if (neighbourType == VoxelTypes.SlopeForwardInv)
+                                {
+                                    AddTri(31, meshVerticies.Count, x, y, z, false, false);
                                 }
                                 break;
                             case VoxelTypes.SlopeLeftInv:
@@ -348,38 +400,52 @@ namespace Voxel
                                 {
                                     AddTri(28, meshVerticies.Count, x, y, z, true, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeRightInv)
+                                {
+                                    AddTri(28, meshVerticies.Count, x, y, z, false, false);
+                                }
                                 neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
                                 if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBackInv)
                                 {
                                     AddTri(3, meshVerticies.Count, x, y, z, true, true);
                                 }
+                                else if (neighbourType == VoxelTypes.SlopeRightInv)
+                                {
+                                    AddTri(3, meshVerticies.Count, x, y, z, false, false);
+                                }
                                 break;
                             case VoxelTypes.CornerForwardRight:
                                 AddTri(14, meshVerticies.Count, x, y, z);
-                                if (_voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[3, 4], y + Faces[3, 5], z + Faces[3, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBack)
                                 {
                                     AddTri(29, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[4, 4], y + Faces[4, 5], z + Faces[4, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeRight)
                                 {
                                     AddTri(4, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeForwardInv)
                                 {
                                     AddTri(27, meshVerticies.Count, x, y, z, true, true);
                                 }
                                 break;
                             case VoxelTypes.CornerBackRight:
                                 AddTri(15, meshVerticies.Count, x, y, z);
-                                if (_voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[2, 4], y + Faces[2, 5], z + Faces[2, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeForward || neighbourType == VoxelTypes.SlopeHorizontalBack)
                                 {
                                     AddTri(28, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[5, 4], y + Faces[5, 5], z + Faces[5, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeLeft || neighbourType == VoxelTypes.SlopeHorizontalForward)
                                 {
                                     AddTri(5, meshVerticies.Count, x, y, z, false, true);
                                 }
-                                if (_voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]] == VoxelTypes.Whole)
+                                neighbourType = _voxels[x + Faces[1, 4], y + Faces[1, 5], z + Faces[1, 6]];
+                                if (neighbourType == VoxelTypes.Whole || neighbourType == VoxelTypes.SlopeBackInv)
                                 {
                                     AddTri(27, meshVerticies.Count, x, y, z, false, true);
                                 }
