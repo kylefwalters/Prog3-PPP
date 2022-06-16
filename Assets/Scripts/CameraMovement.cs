@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class CameraMovement : MonoBehaviour
 {
@@ -9,13 +11,29 @@ public class CameraMovement : MonoBehaviour
     [SerializeField]
     float _rotationSpeed = 3.0f;
 
+    [Header("FPS Display"), SerializeField]
+    TextMeshProUGUI _fpsText;
+    [SerializeField]
+    float _refreshRate = 0.1f;
+    float _currentRefreshRate;
+
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        _currentRefreshRate = _refreshRate;
     }
 
     private void Update()
     {
+        // Framerate Display
+        int fps = (int)(1f / Time.unscaledDeltaTime);
+        if (_currentRefreshRate <= 0)
+        {
+            _currentRefreshRate = _refreshRate;
+            _fpsText.text = Mathf.Ceil(fps).ToString();
+        }
+        _currentRefreshRate -= Time.unscaledDeltaTime;
+
         // Camera Movement
         // Forward
         if (Input.GetKey(KeyCode.W))
@@ -66,7 +84,7 @@ public class CameraMovement : MonoBehaviour
             {
                 rotation.y = -_rotationSpeed * Time.deltaTime;
             }
-            transform.eulerAngles += rotation; 
+            transform.eulerAngles += rotation;
         }
     }
 }
