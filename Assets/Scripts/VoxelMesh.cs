@@ -112,16 +112,17 @@ namespace Voxel
                 {
                     print(_voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z]);
                     _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z] = newValue;
-                    for (int x = alternativeVoxel.x - 1; x <= alternativeVoxel.x + 1; ++x)
-                    {
-                        for (int y = alternativeVoxel.y - 1; x <= alternativeVoxel.y + 1; ++y)
-                        {
-                            for (int z = alternativeVoxel.z - 1; x <= alternativeVoxel.z + 1; ++z)
-                            {
-                                BlockMarch(x, y, z);
-                            }
-                        }
-                    }
+                    //for (int x = Mathf.Max(alternativeVoxel.x - 1, 1); x <= Mathf.Min(alternativeVoxel.x + 1, _dimentions.x - 1); ++x)
+                    //{
+                    //    for (int y = Mathf.Max(alternativeVoxel.y - 1, 1); y <= Mathf.Min(alternativeVoxel.y + 1, _dimentions.x - 1); ++y)
+                    //    {
+                    //        for (int z = Mathf.Max(alternativeVoxel.z - 1, 1); z <= Mathf.Min(alternativeVoxel.z + 1, _dimentions.x - 1); ++z)
+                    //        {
+                    //            BlockMarch(x, y, z);
+                    //        }
+                    //    }
+                    //}
+                    MeshMarch();
                     GenerateMesh();
                 }
             }
@@ -131,16 +132,17 @@ namespace Voxel
             {
                 print(_voxels[voxelX, voxelY, voxelZ]);
                 _voxels[voxelX, voxelY, voxelZ] = newValue;
-                for (int x = voxelX - 1; x <= voxelX + 1; ++x)
-                {
-                    for (int y = voxelY - 1; x <= voxelY + 1; ++y)
-                    {
-                        for (int z = voxelZ - 1; x <= voxelZ + 1; ++z)
-                        {
-                            BlockMarch(x, y, z);
-                        }
-                    }
-                }
+                //for (int x = Mathf.Max(voxelX - 1, 1); x <= Mathf.Min(voxelX + 1, _dimentions.x - 1); ++x)
+                //{
+                //    for (int y = Mathf.Max(voxelY - 1, 1); y <= Mathf.Min(voxelY + 1, _dimentions.x - 1); ++y)
+                //    {
+                //        for (int z = Mathf.Max(voxelZ - 1, 1); z <= Mathf.Min(voxelZ + 1, _dimentions.x - 1); ++z)
+                //        {
+                //            BlockMarch(x, y, z);
+                //        }
+                //    }
+                //}
+                MeshMarch();
                 GenerateMesh();
             }
         }
