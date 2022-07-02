@@ -136,29 +136,30 @@ namespace Voxel
 
                 // Try adjacent voxel
                 selectedVoxel = _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z]._type;
-                //selectedVoxel = (VoxelTypes)Mathf.Min((int)selectedVoxel, 1);
                 if (selectedVoxel != newValue && alternativeVoxel.x != 0 && alternativeVoxel.x != _dimentions.x - 1 &&
                             alternativeVoxel.y != 0 && alternativeVoxel.y != _dimentions.y - 1 &&
                             alternativeVoxel.z != 0 && alternativeVoxel.z != _dimentions.z - 1)
                 {
-                    //selectedVoxel = (VoxelTypes)Mathf.Min((int)selectedVoxel, 1);
+                    selectedVoxel = (VoxelTypes)Mathf.Min((int)selectedVoxel, 1);
                     if (selectedVoxel == newValue)
                     {
                         // Targeted shape is likely a slope or a corner, target adjacent space
-                        Vector3 direction = point - Camera.main.transform.position;
-                        //Vector3 distance = (transform.position + new Vector3(alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z) + new Vector3(0.5f, 0.5f, 0.5f)) - point;
+                        Vector3 direction = transform.TransformPoint(point) - Camera.main.transform.position;
+                        //print(transform.TransformPoint(point) + " - " + Camera.main.transform.position + " = " + direction);
                         Vector3Int dir;
                         if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
                         {
-                            if(Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
-                                dir = new Vector3Int((int)Math.Clamp(direction.x, -1, 1), 0, 0);
+                            //print("AAA");
+                            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+                                dir = new Vector3Int((int)Math.Clamp(-direction.x, -1, 1), 0, 0);
                             else
-                                dir = new Vector3Int(0, 0, (int)Math.Clamp(direction.z, -1, 1));
+                                dir = new Vector3Int(0, 0, (int)Math.Clamp(-direction.z, -1, 1));
                         }
                         else if (Mathf.Abs(direction.y) > Mathf.Abs(direction.z))
-                            dir = new Vector3Int(0, (int)Math.Clamp(direction.y, -1, 1), 0);
+                            dir = new Vector3Int(0, (int)Math.Clamp(-direction.y, -1, 1), 0);
                         else
-                            dir = new Vector3Int(0, 0, (int)Math.Clamp(direction.z, -1, 1));
+                            dir = new Vector3Int(0, 0, (int)Math.Clamp(-direction.z, -1, 1));
+                        print(dir);
                         alternativeVoxel += dir;
                     }
 
