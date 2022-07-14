@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System; // Exception
+using System; // Math.Clamp
 
 namespace Voxel
 {
@@ -10,6 +10,19 @@ namespace Voxel
         [SerializeField]
         private Vector3Int _dimentions = new Vector3Int(10, 10, 10);
         private Mesh _meshCollision;
+        [SerializeField]
+        private bool _fillGrid = false;
+        public GameObject _prefab;
+        [SerializeField]
+        private uint _blockCount = 0;
+
+        // Bounds
+        private int boundsMinX = 1;
+        private int boundsMaxX = 1;
+        private int boundsMinY = 1;
+        private int boundsMaxY = 1;
+        private int boundsMinZ = 1;
+        private int boundsMaxZ = 1;
 
         public enum VoxelTypes
         {
@@ -69,9 +82,12 @@ namespace Voxel
                 }
             }
 
-            FillGrid();
-            MeshMarch();
-            GenerateMesh();
+            if (_fillGrid)
+            {
+                FillGrid();
+                MeshMarch();
+                GenerateMesh();
+            }
         }
 
         private void Update()
@@ -98,6 +114,10 @@ namespace Voxel
                     }
                 }
             }
+            if (Input.GetKeyDown(KeyCode.R))
+                CenterGrid();
+            if (Input.GetKeyDown(KeyCode.T))
+                ResizeGrid(new Vector3Int(_dimentions.x + 1, _dimentions.y + 1, _dimentions.z + 1));
         }
 
         void FillGrid()
@@ -109,9 +129,23 @@ namespace Voxel
                     for (int z = 1; z < _dimentions.z - 1; ++z)
                     {
                         _voxels[x, y, z]._type = (VoxelTypes)1;
+                        ++_blockCount;
+                        UpdateBounds(new Vector3Int(x, y, z));
                     }
                 }
             }
+            //for (int x = 1; x < 2; ++x)
+            //{
+            //    for (int y = 1; y < _dimentions.y - 1; ++y)
+            //    {
+            //        for (int z = 1; z < 2; ++z)
+            //        {
+            //            _voxels[x, y, z]._type = (VoxelTypes)1;
+            //            ++_blockCount;
+            //            UpdateBounds(new Vector3Int(x, y, z));
+            //        }
+            //    }
+            //}
         }
 
         void EditVoxel(Vector3 point, VoxelTypes newValue)
@@ -161,10 +195,21 @@ namespace Voxel
                             dir = new Vector3Int(0, 0, (int)Math.Clamp(-direction.z, -1, 1));
                         print(dir);
                         alternativeVoxel += dir;
+                        alternativeVoxel = Vector3Int.Max(new Vector3Int(1, 1, 1), alternativeVoxel);
+                        alternativeVoxel = Vector3Int.Min(new Vector3Int(_dimentions.x - 2, _dimentions.y - 2, _dimentions.z - 2), alternativeVoxel);
                     }
 
                     print("(" + alternativeVoxel.x + ", " + alternativeVoxel.y + ", " + alternativeVoxel.z + ") = " + _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z]._type + " (Alt)");
                     _voxels[alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z]._type = newValue;
+                    if (newValue == VoxelTypes.Empty)
+                    {
+                        CheckGridConnection(alternativeVoxel);
+                        --_blockCount;
+                    }
+                    else
+                        ++_blockCount;
+                    UpdateBounds(new Vector3Int(alternativeVoxel.x, alternativeVoxel.y, alternativeVoxel.z));
+
                     for (int x = Mathf.Max(1, alternativeVoxel.x - 1); x <= Mathf.Min(_dimentions.x - 2, alternativeVoxel.x + 1); ++x)
                     {
                         for (int y = Mathf.Max(1, alternativeVoxel.y - 1); y <= Mathf.Min(_dimentions.y - 2, alternativeVoxel.y + 1); ++y)
@@ -194,6 +239,15 @@ namespace Voxel
             {
                 print("(" + voxelX + ", " + voxelY + ", " + voxelZ + ") = " + _voxels[voxelX, voxelY, voxelZ]._type);
                 _voxels[voxelX, voxelY, voxelZ]._type = newValue;
+                if (newValue == VoxelTypes.Empty)
+                {
+                    CheckGridConnection(new Vector3Int(voxelX, voxelY, voxelZ));
+                    --_blockCount;
+                }
+                else
+                    ++_blockCount;
+                UpdateBounds(new Vector3Int(voxelX, voxelY, voxelZ));
+
                 for (int x = Mathf.Max(1, voxelX - 1); x <= Mathf.Min(_dimentions.x - 2, voxelX + 1); ++x)
                 {
                     for (int y = Mathf.Max(1, voxelY - 1); y <= Mathf.Min(_dimentions.y - 2, voxelY + 1); ++y)
@@ -247,37 +301,37 @@ namespace Voxel
             // 4~6: Used for checking neighbouring voxels
             // 7~8: Used for uv
             {0,1,2,3,0,1,0,0,0},            // Top [0]
-            {7,6,5,4,0,-1,0,1,0},           // Bottom
-            {2,1,5,6,0,0,1,1,1},            // Front
-            {0,3,7,4,0,0,-1,1,1},           // Back
-            {3,2,6,7,1,0,0,1,1},            // Right
-            {4,5,1,0,-1,0,0,1,1},           // Left
-            {0,5,6,3,0,0,0,1,1},            // Slope Forward [6]
-            {0,1,6,7,0,0,0,1,1},            // Slope Right
-            {1,2,7,4,0,0,0,1,1},            // Slope Back
-            {4,5,2,3,0,0,0,1,1},            // Slope Left
-            {2,1,4,7,0,0,0,1,1},            // Slope Forward Inverted
-            {3,2,5,4,0,0,0,1,1},            // Slope Right Inverted
-            {3,6,5,0,0,0,0,1,1},            // Slope Back Inverted
-            {7,6,1,0,0,0,0,1,1},            // Slope Left Inverted
-            {3,4,6,0,0,0,0,1,1},            // Corner Forward Right [14]
-            {1,6,4,0,0,0,0,1,1},            // Corner Back Right
-            {5,2,7,4,0,0,0,1,1},            // Corner Back Left
-            {0,5,7,0,0,0,0,1,1},            // Corner Forward Left
-            {6,1,3,0,0,0,0,1,1},            // Corner Forward Right Inverted
-            {5,0,2,0,0,0,0,1,1},            // Corner Back Right Inverted
-            {4,3,1,0,0,0,0,1,1},            // Corner Back Left Inverted
-            {7,2,0,0,0,0,0,1,1},            // Corner Forward Left Inverted
-            {5,1,3,7,0,0,0,1,1},            // Slope Horizontal Forward [22]
-            {4,0,2,6,0,0,0,1,1},            // Slope Horizontal Right
-            {3,1,5,7,0,0,0,1,1},            // Slope Horizontal Down
-            {2,0,4,6,0,0,0,1,1},            // Slope Horizontal Left
+            {7,6,5,4,0,-1,0,0,0},           // Bottom
+            {2,1,5,6,0,0,1,0,0},            // Front
+            {0,3,7,4,0,0,-1,0,0},           // Back
+            {3,2,6,7,1,0,0,0,0},            // Right
+            {1,0,4,5,-1,0,0,0,0},           // Left
+            {3,0,5,6,0,0,0,0,0},            // Slope Forward [6]
+            {0,1,6,7,0,0,0,0,0},            // Slope Right
+            {1,2,7,4,0,0,0,0,0},            // Slope Back
+            {2,3,4,5,0,0,0,0,0},            // Slope Left
+            {2,1,4,7,0,0,0,0,0},            // Slope Forward Inverted
+            {3,2,5,4,0,0,0,0,0},            // Slope Right Inverted
+            {0,3,6,5,0,0,0,0,0},            // Slope Back Inverted
+            {1,0,7,6,0,0,0,0,0},            // Slope Left Inverted
+            {3,4,6,0,0,0,0,0,0},            // Corner Forward Right [14]
+            {1,6,4,0,0,0,0,0,0},            // Corner Back Right
+            {5,2,7,4,0,0,0,0,0},            // Corner Back Left
+            {0,5,7,0,0,0,0,0,0},            // Corner Forward Left
+            {6,1,3,0,0,0,0,0,0},            // Corner Forward Right Inverted
+            {5,0,2,0,0,0,0,0,0},            // Corner Back Right Inverted
+            {4,3,1,0,0,0,0,0,0},            // Corner Back Left Inverted
+            {7,2,0,0,0,0,0,0,0},            // Corner Forward Left Inverted
+            {1,3,7,5,0,0,0,0,0},            // Slope Horizontal Forward [22]
+            {0,2,6,4,0,0,0,0,0},            // Slope Horizontal Right
+            {3,1,5,7,0,0,0,0,0},            // Slope Horizontal Down
+            {2,0,4,6,0,0,0,0,0},            // Slope Horizontal Left
             {3,0,1,2,0,1,0,0,0},            // Top Alternate [26]
-            {4,7,6,5,0,-1,0,1,0},           // Bottom Alternate
-            {6,2,1,5,0,0,1,1,1},            // Front Alternate
-            {4,0,3,7,0,0,-1,1,1},           // Back Alternate
-            {7,3,2,6,1,0,0,1,1},            // Right Alternate
-            {5,1,0,4,-1,0,0,1,1}            // Left Alternate
+            {4,7,6,5,0,-1,0,0,0},           // Bottom Alternate
+            {6,2,1,5,0,0,1,0,0},            // Front Alternate
+            {4,0,3,7,0,0,-1,0,0},           // Back Alternate
+            {7,3,2,6,1,0,0,0,0},            // Right Alternate
+            {5,1,0,4,-1,0,0,0,0}            // Left Alternate
             };
 
             void AddQuad(int facenum, int v, int x, int y, int z)
@@ -444,14 +498,14 @@ namespace Voxel
                                 }
                                 else if (opposingFaceMask == 0b000101)
                                 {
-                                    if (i == 0 || i == 1 || i == 5)
+                                    if (i == 0 || i == 1)
                                         AddTri(i, meshVerticies.Count, x, y, z, true);
                                     else
                                         AddTri(i, meshVerticies.Count, x, y, z);
                                 }
                                 else if (opposingFaceMask == 0b000100)
                                 {
-                                    if (i == 0 || i == 1 || i == 5)
+                                    if (i == 0 || i == 1)
                                         AddTri(i, meshVerticies.Count, x, y, z);
                                     else
                                         AddTri(i, meshVerticies.Count, x, y, z, true);
@@ -461,10 +515,11 @@ namespace Voxel
                     }
                 }
             }
+
             // Merge collision mesh along X axis
-            VoxelTypes lastType = VoxelTypes.Empty;
-            List<int> vertsToBeDeleted = new List<int>();
-            int vertsToBeReplaced = int.MaxValue;
+            //VoxelTypes lastType = VoxelTypes.Empty;
+            //List<int> vertsToBeDeleted = new List<int>();
+            //int vertsToBeReplaced = int.MaxValue;
             //for (int z = _dimentions.z - 2; z != 0; z--)
             //{
             //    for (int y = _dimentions.y - 2; y != 0; y--)
@@ -610,7 +665,6 @@ namespace Voxel
                     _voxels[x, y, z]._occupiedFaces = (0b000001 << 3) + (0b000101 << 6) + (0b000011 << 9) + (0b000001 << 15);
                     _voxels[x, y, z]._quadType = 7;
                     break;
-                case 20:
                 case 36:
                 case 39:
                     _voxels[x, y, z]._type = VoxelTypes.SlopeForwardInv;
@@ -629,12 +683,13 @@ namespace Voxel
                     _voxels[x, y, z]._quadType = 19;
                     _voxels[x, y, z]._isTri = true;
                     break;
+                case 20:
                 case 23:
-                case 24:
                     _voxels[x, y, z]._type = VoxelTypes.SlopeBackInv;
                     _voxels[x, y, z]._occupiedFaces = 0b000001 + (0b000001 << 6) + (0b000010 << 12) + (0b000100 << 15);
                     _voxels[x, y, z]._quadType = 12;
                     break;
+                case 24:
                 case 25:
                     _voxels[x, y, z]._type = VoxelTypes.CornerBackLeft;
                     _voxels[x, y, z]._occupiedFaces = (0b000010 << 3) + (0b000011 << 6) + (0b000101 << 12);
@@ -705,6 +760,206 @@ namespace Voxel
             }
         }
 
+        bool CheckGridConnection(Vector3Int center)
+        {
+            Vector3Int[] offsets = new Vector3Int[6]
+            {
+                new Vector3Int(1,0,0),
+                new Vector3Int(-1,0,0),
+                new Vector3Int(0,1,0),
+                new Vector3Int(0,-1,0),
+                new Vector3Int(0,0,1),
+                new Vector3Int(0,0,-1)
+            };
+
+            List<Vector3Int> adjacentVoxels = new List<Vector3Int>();
+            for (int i = 0; i < 6; ++i)
+            {
+                Vector3Int centerCopy = center + offsets[i];
+                if (_voxels[centerCopy.x, centerCopy.y, centerCopy.z]._type != VoxelTypes.Empty)
+                    adjacentVoxels.Add(centerCopy);
+            }
+            bool[,,] gridChecked = new bool[_dimentions.x, _dimentions.y, _dimentions.z];
+
+            // Recursively check adjacent voxels
+            void CheckSpace(Vector3Int coord)
+            {
+                gridChecked[coord.x, coord.y, coord.z] = true;
+                adjacentVoxels.Remove(coord);
+                if (adjacentVoxels.Count == 0)
+                    return;
+                // Check adjacent spaces
+                for (int i = 0; i < 6; ++i)
+                {
+                    Vector3Int centerCopy = coord + offsets[i];
+                    if (gridChecked[centerCopy.x, centerCopy.y, centerCopy.z] == false && _voxels[centerCopy.x, centerCopy.y, centerCopy.z]._type != VoxelTypes.Empty)
+                        CheckSpace(new Vector3Int(centerCopy.x, centerCopy.y, centerCopy.z));
+                }
+            }
+            CheckSpace(adjacentVoxels[0]);
+
+            if (adjacentVoxels.Count == 0)
+            {
+                return true;
+            }
+
+            // Remove disconnected portion from grid
+            void RemoveFromGrid(VoxelMesh voxelInstance, Vector3Int coord)
+            {
+                // Remove from current grid & add to new grid
+                voxelInstance._voxels[coord.x, coord.y, coord.z]._type = _voxels[coord.x, coord.y, coord.z]._type;
+                ++voxelInstance._blockCount;
+                --_blockCount;
+                _voxels[coord.x, coord.y, coord.z]._type = VoxelTypes.Empty;
+                voxelInstance.UpdateBounds(coord);
+                adjacentVoxels.Remove(coord);
+                for (int i = 0; i < 6; ++i)
+                {
+                    Vector3Int centerCopy = coord + offsets[i];
+                    if (_voxels[centerCopy.x, centerCopy.y, centerCopy.z]._type != VoxelTypes.Empty)
+                        RemoveFromGrid(voxelInstance, new Vector3Int(centerCopy.x, centerCopy.y, centerCopy.z));
+                }
+            }
+            while (adjacentVoxels.Count != 0)
+            {
+                GameObject newVoxelMesh = GameObject.Instantiate(_prefab, transform.position, transform.rotation);
+                VoxelMesh newVoxelhInstance = newVoxelMesh.GetComponent<VoxelMesh>();
+                RemoveFromGrid(newVoxelhInstance, adjacentVoxels[0]);
+                newVoxelhInstance.CenterGrid();
+                newVoxelhInstance.MeshMarch();
+                newVoxelhInstance.GenerateMesh();
+            }
+            MeshMarch();
+
+            return false;
+        }
+
+        void UpdateBounds(Vector3Int coords)
+        {
+            boundsMinX = Math.Min(boundsMinX, coords.x);
+            boundsMaxX = Math.Max(boundsMaxX, coords.x);
+            boundsMinY = Math.Min(boundsMinY, coords.y);
+            boundsMaxY = Math.Max(boundsMaxY, coords.y);
+            boundsMinZ = Math.Min(boundsMinZ, coords.z);
+            boundsMaxZ = Math.Max(boundsMaxZ, coords.z);
+        }
+
+        void CenterGrid()
+        {
+            Vector3Int offset = new Vector3Int((_dimentions.x - boundsMaxX - boundsMinX) / 2,
+                                               (_dimentions.y - boundsMaxY - boundsMinY) / 2,
+                                               (_dimentions.z - boundsMaxZ - boundsMinZ) / 2);
+            print(offset);
+            TransposeGrid(offset);
+        }
+
+        void TransposeGrid(Vector3Int offset)
+        {
+            if (offset == Vector3Int.zero)
+            {
+                return;
+            }
+
+            if (boundsMinX + offset.x < 1 || boundsMaxX + offset.x > _dimentions.x - 2
+                || boundsMinY + offset.y < 1 || boundsMaxY + offset.y > _dimentions.y - 2
+                || boundsMinZ + offset.z < 1 || boundsMaxZ + offset.z > _dimentions.z - 2)
+            {
+                Debug.LogError("Transpose is out of bounds \n" + "Offset: " + offset +
+                    "\nBounds Min X: " + boundsMinX + "Bounds Max X" + boundsMaxX +
+                    "\nBounds Min Y: " + boundsMinY + "Bounds Max Y" + boundsMaxY +
+                    "\nBounds Min Z: " + boundsMinZ + "Bounds Max Z" + boundsMaxZ);
+                return;
+            }
+
+            int xDir = Mathf.Clamp(-offset.x, -1, 1);
+            int yDir = Mathf.Clamp(-offset.y, -1, 1);
+            int zDir = Mathf.Clamp(-offset.z, -1, 1);
+            xDir = xDir == 0 ? -1 : xDir;
+            yDir = yDir == 0 ? -1 : yDir;
+            zDir = zDir == 0 ? -1 : zDir;
+            // Transpose voxels
+            for (int x = xDir > 0 ? 1 : _dimentions.x - 1; xDir > 0 ? x < _dimentions.x - 1 : x > 0; x += xDir)
+            {
+                for (int y = yDir > 0 ? 1 : _dimentions.y - 1; yDir > 0 ? y < _dimentions.y - 1 : y > 0; y += yDir)
+                {
+                    for (int z = zDir > 0 ? 1 : _dimentions.z - 1; zDir > 0 ? z < _dimentions.z - 1 : z > 0; z += zDir)
+                    {
+                        if (_voxels[x, y, z]._type != VoxelTypes.Empty)
+                        {
+                            _voxels[x + offset.x, y + offset.y, z + offset.z] = _voxels[x, y, z];
+                            _voxels[x, y, z] = _voxels[0, 0, 0]; // Zero out voxel
+                        }
+                    }
+                }
+            }
+            // Update bounds
+            boundsMinX += offset.x;
+            boundsMaxX += offset.x;
+            boundsMinY += offset.y;
+            boundsMaxY += offset.y;
+            boundsMinZ += offset.z;
+            boundsMaxZ += offset.z;
+            // Return to original position
+            transform.position -= offset;
+            GenerateMesh();
+        }
+
+        void ResizeGrid(Vector3Int newDimensions)
+        {
+            if (newDimensions == _dimentions)
+            {
+                return;
+            }
+
+            if (newDimensions.x < 0 || newDimensions.y < 0 || newDimensions.z < 0)
+                Debug.LogError("New dimensions are negative\n" + "New Dimensions: " + newDimensions);
+            if (boundsMaxX - boundsMinX > newDimensions.x - 2 || boundsMaxY - boundsMinY > newDimensions.y - 2 || boundsMaxZ - boundsMinZ > newDimensions.z - 2)
+            {
+                Debug.LogError("New dimension puts current grid out of bounds \n" + "New Dimensions: " + newDimensions +
+                    "\nWidth: " + (boundsMaxX - boundsMinX) + "\nHeight: " + (boundsMaxY - boundsMinY) + "\nDepth: " + (boundsMaxZ - boundsMinZ));
+                return;
+            }
+
+            Voxel[,,] newVoxels = new Voxel[newDimensions.x, newDimensions.y, newDimensions.z];
+            for (int x = 0; x < newDimensions.x; ++x)
+            {
+                for (int y = 0; y < newDimensions.y; ++y)
+                {
+                    for (int z = 0; z < newDimensions.z; ++z)
+                    {
+                        newVoxels[x, y, z] = new Voxel();
+                    }
+                }
+            }
+            // Copy over current grid
+            Vector3Int offset = new Vector3Int((_dimentions.x - boundsMaxX - boundsMinX) / 2,
+                                               (_dimentions.y - boundsMaxY - boundsMinY) / 2,
+                                               (_dimentions.z - boundsMaxZ - boundsMinZ) / 2);
+            for (int x = boundsMinX; x <= boundsMaxX; ++x)
+            {
+                for (int y = boundsMinY; y <= boundsMaxY; ++y)
+                {
+                    for (int z = boundsMinZ; z <= boundsMaxZ; ++z)
+                    {
+                        newVoxels[x + offset.x, y + offset.y, z + offset.z] = _voxels[x, y, z];
+                    }
+                }
+            }
+            _voxels = newVoxels;
+            // Update bounds
+            boundsMinX += offset.x;
+            boundsMaxX += offset.x;
+            boundsMinY += offset.y;
+            boundsMaxY += offset.y;
+            boundsMinZ += offset.z;
+            boundsMaxZ += offset.z;
+            // Return to original position
+            transform.position -= offset;
+            // Update grid
+            GenerateMesh();
+            _dimentions = newDimensions;
+        }
+
         // Similar to Mathf.RoundToInt, but rounds down for 0.5f
         static int RoundToIntAltDown(float num)
         {
@@ -718,7 +973,7 @@ namespace Voxel
                 return Mathf.RoundToInt(num);
             }
         }
-        // Similar to Mathf.RoundToInt, but rounds down for 0.5f
+        // Similar to Mathf.RoundToInt, but rounds Up for 0.5f
         static int RoundToIntAltUp(float num)
         {
             if (Mathf.Abs((num % 1) - 0.5f) < 0.01f)
@@ -730,6 +985,13 @@ namespace Voxel
             {
                 return Mathf.RoundToInt(num);
             }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            // Draw Outer Bounds of Grid
+            Gizmos.color = new Color(1, 0, 0, 1);
+            Gizmos.DrawWireCube(transform.position + new Vector3(_dimentions.x / 2, _dimentions.y / 2, _dimentions.z / 2), new Vector3(_dimentions.x, _dimentions.y, _dimentions.z));
         }
     }
 }
