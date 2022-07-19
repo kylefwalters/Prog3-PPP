@@ -68,9 +68,13 @@ namespace Voxel
         }
         private Voxel[,,] _voxels;
 
+        public Texture2D _texture;
+
         private void Awake()
         {
             _voxels = new Voxel[_dimentions.x, _dimentions.y, _dimentions.z];
+            _texture = new Texture2D(_dimentions.x, _dimentions.y/* * _dimentions.z*/, TextureFormat.ARGB32, false);
+            _texture.filterMode = FilterMode.Point;
             for (int x = 0; x < _dimentions.x; ++x)
             {
                 for (int y = 0; y < _dimentions.y; ++y)
@@ -81,6 +85,8 @@ namespace Voxel
                     }
                 }
             }
+            _texture.Apply();
+            GetComponent<MeshRenderer>().material.mainTexture = _texture;
 
             if (_fillGrid)
             {
@@ -114,6 +120,18 @@ namespace Voxel
                     }
                 }
             }
+            else if (Input.GetMouseButtonDown(2))
+            {
+                RaycastHit hit;
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
+                {
+                    if (hit.collider.gameObject == gameObject)
+                    {
+                        PaintVoxel(transform.InverseTransformPoint(hit.point), Color.black);
+                    }
+                }
+            }
+
             if (Input.GetKeyDown(KeyCode.R))
                 CenterGrid();
             if (Input.GetKeyDown(KeyCode.T))
@@ -134,18 +152,6 @@ namespace Voxel
                     }
                 }
             }
-            //for (int x = 1; x < 2; ++x)
-            //{
-            //    for (int y = 1; y < _dimentions.y - 1; ++y)
-            //    {
-            //        for (int z = 1; z < 2; ++z)
-            //        {
-            //            _voxels[x, y, z]._type = (VoxelTypes)1;
-            //            ++_blockCount;
-            //            UpdateBounds(new Vector3Int(x, y, z));
-            //        }
-            //    }
-            //}
         }
 
         void EditVoxel(Vector3 point, VoxelTypes newValue)
@@ -345,7 +351,11 @@ namespace Voxel
 
                 // Add uvs
                 Vector2 bottomleft = new Vector2(Faces[facenum, 7], Faces[facenum, 8]) / 2f;
-                meshuv.AddRange(new List<Vector2>() { bottomleft + new Vector2(0, 0.5f), bottomleft + new Vector2(0.5f, 0.5f), bottomleft + new Vector2(0.5f, 0), bottomleft });
+                //meshuv.AddRange(new List<Vector2>() { bottomleft + new Vector2(0, 0.5f), bottomleft + new Vector2(0.5f, 0.5f), bottomleft + new Vector2(0.5f, 0), bottomleft });
+                meshuv.AddRange(new List<Vector2>() { new Vector2((float)x / _texture.width, (float)(y/* + y * z + 1*/)/_texture.height),
+                    new Vector2((float)(x + 1) / _texture.width, (float)(y/* + y * z + 1*/) / _texture.height), 
+                    new Vector2((float)(x + 1) / _texture.width, (float)(y/* + y * z*/)/_texture.height),
+                    new Vector2((float)(x)/_texture.width, (float)(y/* + y * z*/)/_texture.height) });
 
                 // Add Collision Mesh
                 if (lastFace == int.MaxValue)
@@ -431,7 +441,10 @@ namespace Voxel
                 // Add uvs
                 Vector2 bottomleft = new Vector2(Faces[facenum, 7], Faces[facenum, 8]) / 2f;
 
-                meshuv.AddRange(new List<Vector2>() { bottomleft + new Vector2(0, 0.5f), bottomleft + new Vector2(0.5f, 0.5f), bottomleft + new Vector2(0.5f, 0) });
+                //meshuv.AddRange(new List<Vector2>() { bottomleft + new Vector2(0, 0.5f), bottomleft + new Vector2(0.5f, 0.5f), bottomleft + new Vector2(0.5f, 0) });
+                meshuv.AddRange(new List<Vector2>() { new Vector2((float)x / _texture.width, (float)(y/* + y * z + 1*/)/_texture.height),
+                    new Vector2((float)(x + 1) / _texture.width, (float)(y/* + y * z + 1*/) / _texture.height),
+                    new Vector2((float)(x + 1) / _texture.width, (float)(y/* + y * z*/)/_texture.height)});
             }
 
             // Generate faces
@@ -958,6 +971,24 @@ namespace Voxel
             // Update grid
             GenerateMesh();
             _dimentions = newDimensions;
+        }
+
+        void PaintVoxel(Vector3 coord, Color color)
+        {
+            Vector3Int roundedCoord = new Vector3Int(Mathf.RoundToInt(coord.x), Mathf.RoundToInt(coord.y), Mathf.RoundToInt(coord.z));
+
+            VoxelTypes selectedVoxel = _voxels[roundedCoord.x, roundedCoord.y, roundedCoord.z]._type;
+            print("Paint: " + selectedVoxel);
+
+            if (selectedVoxel != VoxelTypes.Empty)
+                _texture.SetPixel(roundedCoord.x, roundedCoord.y/* + _dimentions.y * roundedCoord.z*/, color);
+            else
+            {
+                Vector3Int alternativeVoxel = new Vector3Int(RoundToIntAltUp(coord.x), RoundToIntAltUp(coord.y), RoundToIntAltUp(coord.z));
+                print("Paint: " + alternativeVoxel);
+                _texture.SetPixel(alternativeVoxel.x, alternativeVoxel.y/* + _dimentions.y * alternativeVoxel.z*/, color);
+            }
+            _texture.Apply();
         }
 
         // Similar to Mathf.RoundToInt, but rounds down for 0.5f
